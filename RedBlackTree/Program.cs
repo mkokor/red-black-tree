@@ -86,8 +86,10 @@ internal class Program
       if (userChoice == 2)
       {
         Console.WriteLine("\n\nThank you for your time! Goodbye.");
-        return;
+        break;
       }
     }
+    _redBlackTree.RotateLeft(_redBlackTree.Root.LeftChild);
+    Console.WriteLine($"\n{_redBlackTree}\n");
   }
 }

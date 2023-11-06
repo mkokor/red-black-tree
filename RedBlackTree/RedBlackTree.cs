@@ -48,6 +48,23 @@ namespace RedBlackTree
             // Fix!
         }
 
+        public void RotateLeft(Node criticalNode)
+        {
+            Node rotationNode = criticalNode.RightChild ?? throw new InvalidOperationException("Unable to do left rotation.");
+            criticalNode.RightChild = rotationNode?.LeftChild;
+            if (rotationNode.LeftChild is not null)
+                rotationNode.LeftChild.Parent = rotationNode;
+            rotationNode.Parent = criticalNode.Parent;
+            if (criticalNode.Parent is null)
+                Root = rotationNode;
+            else if (criticalNode == criticalNode.Parent.LeftChild)
+                criticalNode.Parent.LeftChild = rotationNode;
+            else
+                criticalNode.Parent.RightChild = rotationNode;
+            rotationNode.LeftChild = criticalNode;
+            criticalNode.Parent = rotationNode;
+        }
+
         public class Node
         {
             public int Index { get; set; } // This property is made for testing purposes.
