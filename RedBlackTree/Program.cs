@@ -1,3 +1,5 @@
-﻿Console.WriteLine("Enter your name!");
-var userName = Console.ReadLine();
-Console.WriteLine($"Hello, {userName}!");
+﻿using RedBlackTree;
+
+var redBlackTree = new RedBlackTree<int>();
+
+Console.WriteLine(redBlackTree);
