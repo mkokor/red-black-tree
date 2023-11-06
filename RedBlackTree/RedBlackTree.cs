@@ -23,10 +23,8 @@ namespace RedBlackTree
 
         public override string ToString()
         {
-            string result = "";
-            foreach (Node node in Nodes)
-                result += node.ToString() + (node.Index == Nodes.Count - 1 ? "" : "\n");
-            return result;
+            return Nodes.Select(node => node.ToString() + (node.Index == Nodes.Count - 1 ? "" : "\n"))
+                        .Aggregate((result, value) => result + value);
         }
 
         public void Insert(TKeyValue value)
