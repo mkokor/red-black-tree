@@ -89,7 +89,5 @@ internal class Program
         break;
       }
     }
-    _redBlackTree.RotateLeft(_redBlackTree.Root.LeftChild);
-    Console.WriteLine($"\n{_redBlackTree}\n");
   }
 }
