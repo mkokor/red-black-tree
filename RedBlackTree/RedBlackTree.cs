@@ -1,5 +1,7 @@
+using System.ComponentModel.Design;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
+using RedBlackTree.Exceptions;
 
 namespace RedBlackTree
 {
@@ -72,6 +74,13 @@ namespace RedBlackTree
             return firstOperand?.CompareTo(secondOperand) < 0;
         }
 
+        private static bool AreEqual(TKeyValue firstOperand, TKeyValue secondOperand)
+        {
+            _ = firstOperand ?? throw new ArgumentNullException(nameof(firstOperand));
+            _ = secondOperand ?? throw new ArgumentNullException(nameof(secondOperand));
+            return firstOperand?.CompareTo(secondOperand) == 0;
+        }
+
         public override string ToString()
         {
             List<Node> nodes = GetNodesInorder(root);
@@ -90,6 +99,20 @@ namespace RedBlackTree
             return treeRoot;
         }
 
+        private Node FindByValue(TKeyValue value)
+        {
+            Node result = root;
+            while (result != _sentinel)
+                if (AreEqual(result.KeyValue!, value))
+                    break;
+                else if (IsLessThan(result.KeyValue!, value))
+                    result = result.RightChild!;
+                else
+                    result = result.RightChild!;
+            if (result == _sentinel) throw new NotFoundException("Node with provided value does not exist.");
+            return result;
+        }
+
         #region Deletion
         private void Transplant(Node destination, Node source)
         {
@@ -98,7 +121,45 @@ namespace RedBlackTree
             else if (destination == destination.Parent!.LeftChild)
                 destination.Parent.LeftChild = source;
             else destination.Parent.RightChild = source;
-            source.Parent = destination.Parent;
+            if (source != _sentinel)
+                source.Parent = destination.Parent;
+        }
+
+        public void Delete(TKeyValue value)
+        {
+            Node criticalNode = FindByValue(value);
+            Node replacement = criticalNode;
+            NodeColor replacementOriginalColor = replacement.Color;
+            Node x;
+            if (criticalNode.LeftChild == _sentinel)
+            {
+                x = criticalNode.RightChild!;
+                Transplant(criticalNode, criticalNode.RightChild!);
+            }
+            else if (criticalNode.RightChild == _sentinel)
+            {
+                x = criticalNode.LeftChild!;
+                Transplant(criticalNode, criticalNode.LeftChild!);
+            }
+            else
+            {
+                replacement = FindMinimum(replacement.RightChild!);
+                replacementOriginalColor = replacement.Color;
+                x = replacement.RightChild!;
+                if (replacement != criticalNode.RightChild)
+                {
+                    Transplant(replacement, replacement.RightChild!);
+                    replacement.RightChild = criticalNode.RightChild;
+                    replacement.RightChild!.Parent = replacement;
+                }
+                else if (x.Parent != _sentinel) x.Parent = replacement;
+                Transplant(criticalNode, replacement);
+                replacement.LeftChild = criticalNode.LeftChild;
+                replacement.LeftChild!.Parent = replacement;
+                replacement.Color = criticalNode.Color;
+            }
+            if (replacementOriginalColor == NodeColor.BLACK)
+                return; // Fix!
         }
         #endregion
 

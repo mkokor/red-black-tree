@@ -3,7 +3,7 @@ using RedBlackTree.Exceptions;
 
 internal class Program
 {
-  private static readonly List<int> _availableOptions = new() { 1, 2, 3 };
+  private static readonly List<int> _availableOptions = new() { 1, 2, 3, 4 };
   private static readonly RedBlackTree<int> _redBlackTree = new();
 
   private delegate void InputValidation(string? inputValue);
@@ -76,7 +76,7 @@ internal class Program
     Console.WriteLine("\nWelcome!");
     while (true)
     {
-      Console.WriteLine("\n\nAvailable options: \n    1 - Insert an element\n    2 - Display nodes inorder\n    3 - Exit");
+      Console.WriteLine("\n\nAvailable options: \n    1 - Insert an element\n    2 - Delete an element\n    3 - Display nodes inorder\n    4 - Exit");
       int userChoice = GetSelectedOption();
       if (userChoice == 1)
       {
@@ -85,9 +85,19 @@ internal class Program
       }
       else if (userChoice == 2)
       {
-        Console.WriteLine($"\n\n{_redBlackTree}");
+        try
+        {
+          _redBlackTree.Delete(GetInsertionValue());
+          Console.WriteLine("\n\nValue successfully inserted!");
+        }
+        catch (NotFoundException)
+        {
+          Console.WriteLine("\n\nProvided value is not in the tree.");
+        }
       }
-      if (userChoice == 3)
+      else if (userChoice == 3)
+        Console.WriteLine($"\n\n{_redBlackTree}");
+      if (userChoice == 4)
       {
         Console.WriteLine("\n\nThank you for your time! Goodbye.\n");
         break;
