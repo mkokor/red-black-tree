@@ -5,6 +5,7 @@ namespace RedBlackTree
 {
     public class RedBlackTree<TKeyValue> where TKeyValue : IComparable
     {
+        #region NodeClass
         private class Node
         {
             public int Index { get; set; } // This property is made for testing purposes.
@@ -30,15 +31,17 @@ namespace RedBlackTree
                 return $"Index: {Index}; Value: {KeyValue}; Color: {Color}; LeftChild: {LeftChildString}; RightChild: {RightChildString}; Parent: {ParentString}";
             }
         }
+        #endregion
 
+        #region NodeColorEnum
         public enum NodeColor
         {
             RED,
             BLACK
         }
+        #endregion
 
         private Node? root; // If a tree is empty, root is a null (it is sentinel node).
-
         private int numberOfElements;
 
         public RedBlackTree()
