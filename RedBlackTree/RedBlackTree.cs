@@ -1,6 +1,4 @@
-using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
-using RedBlackTree.Exceptions;
 
 namespace RedBlackTree
 {
@@ -28,9 +26,9 @@ namespace RedBlackTree
 
             public override string ToString()
             {
-                string LeftChildString = LeftChild is null ? "null" : $"{LeftChild.Index}";
-                string RightChildString = RightChild is null ? "null" : $"{RightChild.Index}";
-                string ParentString = Parent is null ? "null" : $"{Parent.Index}";
+                string LeftChildString = LeftChild is null || LeftChild.Index == 0 ? "sentinel" : $"{LeftChild.Index}";
+                string RightChildString = RightChild is null || RightChild.Index == 0 ? "sentinel" : $"{RightChild.Index}";
+                string ParentString = Parent is null || Parent.Index == 0 ? "sentinel" : $"{Parent.Index}";
                 return $"Index: {Index}; Value: {KeyValue}; Color: {Color}; LeftChild: {LeftChildString}; RightChild: {RightChildString}; Parent: {ParentString}";
             }
         }
@@ -54,14 +52,17 @@ namespace RedBlackTree
             _sentinel = new Node(default, null, null, NodeColor.BLACK);
             root = _sentinel;
         }
-        /*
-                private List<Node>? GetNodesInOrder(Node subtreeRoot)
-                {
-                    if (subtreeRoot is null)
-                        return null;
-                    List<Node> nodes = new();
-                    return nodes;
-                }*/
+
+        private List<Node> GetNodesInorder(Node subtreeRoot)
+        {
+            if (subtreeRoot == _sentinel)
+                return new List<Node>();
+            List<Node> nodes = new();
+            nodes.AddRange(GetNodesInorder(subtreeRoot.LeftChild!));
+            nodes.Add(subtreeRoot);
+            nodes.AddRange(GetNodesInorder(subtreeRoot.RightChild!));
+            return nodes;
+        }
 
         private static bool IsLessThan(TKeyValue firstOperand, TKeyValue secondOperand)
         {
@@ -72,8 +73,11 @@ namespace RedBlackTree
 
         public override string ToString()
         {
-            return "";/*Nodes.Select(node => node.ToString() + (node.Index == Nodes.Count - 1 ? "" : "\n"))
-                        .Aggregate((result, value) => result + value);*/
+            List<Node> nodes = GetNodesInorder(root);
+            if (nodes.Count == 0)
+                return "The tree is empty.";
+            return nodes.Select(node => node.ToString() + (nodes.IndexOf(node) == nodes.Count - 1 ? "" : "\n"))
+                        .Aggregate((result, value) => result + value);
         }
 
         public void Insert(TKeyValue value)
@@ -92,9 +96,64 @@ namespace RedBlackTree
                 currentNodeParent.LeftChild = newNode;
             else
                 currentNodeParent.RightChild = newNode;
-            newNode.Index = numberOfElements;
             numberOfElements++;
-            // Fix!
+            newNode.Index = numberOfElements;
+            FixTreeStructure(newNode);
+        }
+
+        private void FixTreeStructure(Node criticalNode)
+        {
+            if (criticalNode == _sentinel) return;
+            if (criticalNode != root)
+                while (criticalNode.Parent!.Color == NodeColor.RED)
+                {
+                    Node criticalNodeUncle;
+                    if (criticalNode.Parent == criticalNode.Parent.Parent!.LeftChild)
+                    {
+                        criticalNodeUncle = criticalNode.Parent.Parent.RightChild!;
+                        if (criticalNodeUncle.Color == NodeColor.RED)
+                        {
+                            criticalNode.Parent.Color = NodeColor.BLACK;
+                            criticalNodeUncle.Color = NodeColor.BLACK;
+                            criticalNode.Parent.Parent.Color = NodeColor.RED;
+                            criticalNode = criticalNode.Parent.Parent;
+                        }
+                        else
+                        {
+                            if (criticalNode == criticalNode.Parent.RightChild)
+                            {
+                                criticalNode = criticalNode.Parent;
+                                RotateLeft(criticalNode);
+                            }
+                            criticalNode.Parent!.Color = NodeColor.BLACK;
+                            criticalNode.Parent.Parent!.Color = NodeColor.RED;
+                            RotateRight(criticalNode.Parent.Parent);
+                        }
+                    }
+                    else
+                    {
+                        criticalNodeUncle = criticalNode.Parent.Parent.LeftChild!;
+                        if (criticalNodeUncle.Color == NodeColor.RED)
+                        {
+                            criticalNode.Parent.Color = NodeColor.BLACK;
+                            criticalNodeUncle.Color = NodeColor.BLACK;
+                            criticalNode.Parent.Parent.Color = NodeColor.RED;
+                            criticalNode = criticalNode.Parent.Parent;
+                        }
+                        else
+                        {
+                            if (criticalNode == criticalNode.Parent.LeftChild)
+                            {
+                                criticalNode = criticalNode.Parent;
+                                RotateRight(criticalNode);
+                            }
+                            criticalNode.Parent!.Color = NodeColor.BLACK;
+                            criticalNode.Parent.Parent!.Color = NodeColor.RED;
+                            RotateLeft(criticalNode.Parent.Parent);
+                        }
+                    }
+                }
+            root.Color = NodeColor.BLACK;
         }
 
         private void RotateLeft(Node criticalNode)
@@ -132,35 +191,5 @@ namespace RedBlackTree
             rotationNode.RightChild = criticalNode;
             criticalNode.Parent = rotationNode;
         }
-        /*
-        private void FixTreeStructure([DisallowNull] Node criticalNode)
-        {
-            while (criticalNode.Parent is not null && criticalNode.Parent.Color == NodeColor.RED)
-                    {
-                        Node? criticalNodeUncle;
-                        if (criticalNode.Parent == criticalNode.Parent.Parent?.LeftChild)
-                        {
-                            criticalNodeUncle = criticalNode.Parent.RightChild;
-                            if (criticalNodeUncle?.Color == NodeColor.RED)
-                            {
-                                criticalNode.Parent.Color = NodeColor.BLACK;
-                                criticalNodeUncle.Color = NodeColor.BLACK;
-                                criticalNode.Parent.Parent.Color = NodeColor.RED;
-                                criticalNode = criticalNode.Parent.Parent;
-                            }
-                            else
-                            {
-                                if (criticalNode == criticalNode.Parent.RightChild)
-                                {
-                                    criticalNode = criticalNode.Parent;
-                                    RotateLeft(criticalNode);
-                                }
-                                criticalNode.Parent.Color = NodeColor.BLACK;
-                                criticalNode.Parent.Parent.Color = NodeColor.RED;
-                                RotateRight(criticalNode.Parent.Parent);
-                            }
-                        }
-                    }
-            }*/
     }
 }
