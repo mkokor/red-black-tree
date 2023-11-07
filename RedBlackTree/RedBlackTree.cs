@@ -1,5 +1,6 @@
-using System.ComponentModel;
+using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
+using RedBlackTree.Exceptions;
 
 namespace RedBlackTree
 {
@@ -9,18 +10,20 @@ namespace RedBlackTree
         private class Node
         {
             public int Index { get; set; } // This property is made for testing purposes.
-            public TKeyValue KeyValue { get; set; }
+            public TKeyValue? KeyValue { get; set; }
             public NodeColor Color { get; set; }
+
+            // The sentinel does not have any child or a parent so following properties must be nullable.
             public Node? LeftChild { get; set; }
             public Node? RightChild { get; set; }
-            public Node? Parent { get; set; } // The root node has sentinel node as a parent, so this property can be a null.
+            public Node? Parent { get; set; }
 
-            public Node(TKeyValue keyValue, Node? parent)
+            public Node(TKeyValue? keyValue, Node? parent, Node? sentinel, NodeColor color = NodeColor.RED)  // A new node is always red.
             {
                 KeyValue = keyValue;
-                Color = NodeColor.RED; // A new node is always red.
+                Color = color;
                 Parent = parent;
-                LeftChild = RightChild = null; // The sentinental node is left and right child of a new node. 
+                LeftChild = RightChild = sentinel; // The sentinel is left and right child of a new node. 
             }
 
             public override string ToString()
@@ -41,26 +44,30 @@ namespace RedBlackTree
         }
         #endregion
 
-        private Node? root; // If a tree is empty, root is a null (it is sentinel node).
+        private Node root; // If a tree is empty, root is a null (it is sentinel node).
+        private readonly Node _sentinel;
         private int numberOfElements;
 
         public RedBlackTree()
         {
-            root = null;
             numberOfElements = 0;
+            _sentinel = new Node(default, null, null, NodeColor.BLACK);
+            root = _sentinel;
         }
-
-        private List<Node>? GetNodesInOrder(Node subtreeRoot)
-        {
-            if (subtreeRoot is null)
-                return null;
-            List<Node> nodes = new();
-            return nodes;
-        }
+        /*
+                private List<Node>? GetNodesInOrder(Node subtreeRoot)
+                {
+                    if (subtreeRoot is null)
+                        return null;
+                    List<Node> nodes = new();
+                    return nodes;
+                }*/
 
         private static bool IsLessThan(TKeyValue firstOperand, TKeyValue secondOperand)
         {
-            return firstOperand.CompareTo(secondOperand) < 0;
+            _ = firstOperand ?? throw new ArgumentNullException(paramName: nameof(firstOperand));
+            _ = secondOperand ?? throw new ArgumentNullException(paramName: nameof(secondOperand));
+            return firstOperand?.CompareTo(secondOperand) < 0;
         }
 
         public override string ToString()
@@ -71,17 +78,17 @@ namespace RedBlackTree
 
         public void Insert(TKeyValue value)
         {
-            Node? currentNode = root;
-            Node? currentNodeParent = null;
-            while (currentNode is not null)
+            Node currentNode = root;
+            Node currentNodeParent = _sentinel;
+            while (currentNode != _sentinel)
             {
-                currentNodeParent = currentNode;
-                currentNode = IsLessThan(value, currentNode.KeyValue) ? currentNode.LeftChild : currentNode.RightChild;
+                currentNodeParent = currentNode!;
+                currentNode = IsLessThan(value, currentNode.KeyValue!) ? currentNode.LeftChild! : currentNode.RightChild!;
             }
-            Node newNode = new(value, currentNodeParent);
-            if (currentNodeParent is null)
+            Node newNode = new(value, currentNodeParent, _sentinel);
+            if (currentNodeParent == _sentinel)
                 root = newNode;
-            else if (IsLessThan(newNode.KeyValue, currentNodeParent.KeyValue))
+            else if (IsLessThan(newNode.KeyValue!, currentNodeParent.KeyValue!))
                 currentNodeParent.LeftChild = newNode;
             else
                 currentNodeParent.RightChild = newNode;
@@ -92,14 +99,15 @@ namespace RedBlackTree
 
         private void RotateLeft(Node criticalNode)
         {
-            Node rotationNode = criticalNode.RightChild ?? throw new InvalidOperationException("Unable to do left rotation.");
-            criticalNode.RightChild = rotationNode?.LeftChild;
-            if (rotationNode?.LeftChild is not null)
-                rotationNode.LeftChild.Parent = criticalNode;
-            rotationNode.Parent = criticalNode.Parent; // The rotation node can not be a null (first line is throwing exception in case it is).
-            if (criticalNode.Parent is null)
+            if (criticalNode.RightChild == _sentinel) throw new InvalidOperationException("Left rotation can not be done.");
+            Node rotationNode = criticalNode.RightChild!;
+            criticalNode.RightChild = rotationNode.LeftChild;
+            if (rotationNode.LeftChild != _sentinel)
+                rotationNode.LeftChild!.Parent = criticalNode;
+            rotationNode.Parent = criticalNode.Parent;
+            if (criticalNode.Parent == _sentinel)
                 root = rotationNode;
-            else if (criticalNode == criticalNode.Parent.LeftChild)
+            else if (criticalNode == criticalNode.Parent!.LeftChild)
                 criticalNode.Parent.LeftChild = rotationNode;
             else
                 criticalNode.Parent.RightChild = rotationNode;
@@ -109,49 +117,50 @@ namespace RedBlackTree
 
         private void RotateRight([DisallowNull] Node criticalNode)
         {
-            Node rotationNode = criticalNode.LeftChild ?? throw new InvalidOperationException("Unable to do right rotation.");
-            criticalNode.LeftChild = rotationNode?.RightChild;
-            if (rotationNode?.RightChild is not null)
-                rotationNode.RightChild.Parent = criticalNode;
-            rotationNode.Parent = criticalNode.Parent; // The rotation node can not be a null (first line is throwing exception in case it is).
-            if (criticalNode.Parent is null)
+            if (criticalNode.LeftChild == _sentinel) throw new InvalidOperationException("Right rotation can not be done.");
+            Node rotationNode = criticalNode.LeftChild!;
+            criticalNode.LeftChild = rotationNode.RightChild;
+            if (rotationNode.RightChild != _sentinel)
+                rotationNode.RightChild!.Parent = criticalNode;
+            rotationNode.Parent = criticalNode.Parent;
+            if (criticalNode.Parent == _sentinel)
                 root = rotationNode;
-            else if (criticalNode == criticalNode.Parent.LeftChild)
+            else if (criticalNode == criticalNode.Parent!.LeftChild)
                 criticalNode.Parent.LeftChild = rotationNode;
             else
                 criticalNode.Parent.RightChild = rotationNode;
             rotationNode.RightChild = criticalNode;
             criticalNode.Parent = rotationNode;
         }
-
+        /*
         private void FixTreeStructure([DisallowNull] Node criticalNode)
         {
             while (criticalNode.Parent is not null && criticalNode.Parent.Color == NodeColor.RED)
-            {
-                Node? criticalNodeUncle;
-                if (criticalNode.Parent == criticalNode.Parent.Parent?.LeftChild)
-                {
-                    criticalNodeUncle = criticalNode.Parent.RightChild;
-                    if (criticalNodeUncle?.Color == NodeColor.RED)
                     {
-                        criticalNode.Parent.Color = NodeColor.BLACK;
-                        criticalNodeUncle.Color = NodeColor.BLACK;
-                        criticalNode.Parent.Parent.Color = NodeColor.RED;
-                        criticalNode = criticalNode.Parent.Parent;
-                    }
-                    else
-                    {
-                        if (criticalNode == criticalNode.Parent.RightChild)
+                        Node? criticalNodeUncle;
+                        if (criticalNode.Parent == criticalNode.Parent.Parent?.LeftChild)
                         {
-                            criticalNode = criticalNode.Parent;
-                            RotateLeft(criticalNode);
+                            criticalNodeUncle = criticalNode.Parent.RightChild;
+                            if (criticalNodeUncle?.Color == NodeColor.RED)
+                            {
+                                criticalNode.Parent.Color = NodeColor.BLACK;
+                                criticalNodeUncle.Color = NodeColor.BLACK;
+                                criticalNode.Parent.Parent.Color = NodeColor.RED;
+                                criticalNode = criticalNode.Parent.Parent;
+                            }
+                            else
+                            {
+                                if (criticalNode == criticalNode.Parent.RightChild)
+                                {
+                                    criticalNode = criticalNode.Parent;
+                                    RotateLeft(criticalNode);
+                                }
+                                criticalNode.Parent.Color = NodeColor.BLACK;
+                                criticalNode.Parent.Parent.Color = NodeColor.RED;
+                                RotateRight(criticalNode.Parent.Parent);
+                            }
                         }
-                        criticalNode.Parent.Color = NodeColor.BLACK;
-                        criticalNode.Parent.Parent.Color = NodeColor.RED;
-                        RotateRight(criticalNode.Parent.Parent);
                     }
-                }
-            }
-        }
+            }*/
     }
 }
