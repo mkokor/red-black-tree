@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Tracing;
 
 namespace RedBlackTree
 {
@@ -53,14 +54,14 @@ namespace RedBlackTree
             root = _sentinel;
         }
 
-        private List<Node> GetNodesInorder(Node subtreeRoot)
+        private List<Node> GetNodesInorder(Node treeRoot)
         {
-            if (subtreeRoot == _sentinel)
+            if (treeRoot == _sentinel)
                 return new List<Node>();
             List<Node> nodes = new();
-            nodes.AddRange(GetNodesInorder(subtreeRoot.LeftChild!));
-            nodes.Add(subtreeRoot);
-            nodes.AddRange(GetNodesInorder(subtreeRoot.RightChild!));
+            nodes.AddRange(GetNodesInorder(treeRoot.LeftChild!));
+            nodes.Add(treeRoot);
+            nodes.AddRange(GetNodesInorder(treeRoot.RightChild!));
             return nodes;
         }
 
@@ -80,6 +81,28 @@ namespace RedBlackTree
                         .Aggregate((result, value) => result + value);
         }
 
+        private Node FindMinimum(Node treeRoot)
+        {
+            if (treeRoot is null || treeRoot == _sentinel)
+                throw new ArgumentException("Tree root can not be null or sentinel.");
+            while (treeRoot!.LeftChild != _sentinel)
+                treeRoot = treeRoot.LeftChild!;
+            return treeRoot;
+        }
+
+        #region Deletion
+        private void Transplant(Node destination, Node source)
+        {
+            if (destination.Parent == _sentinel)
+                root = source;
+            else if (destination == destination.Parent!.LeftChild)
+                destination.Parent.LeftChild = source;
+            else destination.Parent.RightChild = source;
+            source.Parent = destination.Parent;
+        }
+        #endregion
+
+        #region Insertion
         public void Insert(TKeyValue value)
         {
             Node currentNode = root;
@@ -98,10 +121,10 @@ namespace RedBlackTree
                 currentNodeParent.RightChild = newNode;
             numberOfElements++;
             newNode.Index = numberOfElements;
-            FixTreeStructure(newNode);
+            FixInsertion(newNode);
         }
 
-        private void FixTreeStructure(Node criticalNode)
+        private void FixInsertion(Node criticalNode)
         {
             if (criticalNode == _sentinel) return;
             if (criticalNode != root)
@@ -155,7 +178,9 @@ namespace RedBlackTree
                 }
             root.Color = NodeColor.BLACK;
         }
+        #endregion
 
+        #region Rotations
         private void RotateLeft(Node criticalNode)
         {
             if (criticalNode.RightChild == _sentinel) throw new InvalidOperationException("Left rotation can not be done.");
@@ -191,5 +216,6 @@ namespace RedBlackTree
             rotationNode.RightChild = criticalNode;
             criticalNode.Parent = rotationNode;
         }
+        #endregion
     }
 }
