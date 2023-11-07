@@ -75,7 +75,7 @@ internal class Program
   {
     while (true)
     {
-      Console.WriteLine("Welcome!\n\n\nAvailable options: \n    1 - Insert an element\n    2 - Exit");
+      Console.WriteLine("\nWelcome!\n\n\nAvailable options: \n    1 - Insert an element\n    2 - Exit");
       int userChoice = GetSelectedOption();
       if (userChoice == 1)
       {
@@ -85,7 +85,7 @@ internal class Program
       }
       if (userChoice == 2)
       {
-        Console.WriteLine("\n\nThank you for your time! Goodbye.");
+        Console.WriteLine("\n\nThank you for your time! Goodbye.\n");
         break;
       }
     }

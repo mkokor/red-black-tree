@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+using System.ComponentModel;
 
 namespace RedBlackTree
 {
@@ -52,9 +52,9 @@ namespace RedBlackTree
         {
             Node rotationNode = criticalNode.RightChild ?? throw new InvalidOperationException("Unable to do left rotation.");
             criticalNode.RightChild = rotationNode?.LeftChild;
-            if (rotationNode.LeftChild is not null)
-                rotationNode.LeftChild.Parent = rotationNode;
-            rotationNode.Parent = criticalNode.Parent;
+            if (rotationNode?.LeftChild is not null)
+                rotationNode.LeftChild.Parent = criticalNode;
+            rotationNode.Parent = criticalNode.Parent; // The rotation node can not be a null (first line is throwing exception in case it is).
             if (criticalNode.Parent is null)
                 Root = rotationNode;
             else if (criticalNode == criticalNode.Parent.LeftChild)
@@ -62,6 +62,23 @@ namespace RedBlackTree
             else
                 criticalNode.Parent.RightChild = rotationNode;
             rotationNode.LeftChild = criticalNode;
+            criticalNode.Parent = rotationNode;
+        }
+
+        public void RotateRight(Node criticalNode)
+        {
+            Node rotationNode = criticalNode.LeftChild ?? throw new InvalidOperationException("Unable to do right rotation.");
+            criticalNode.LeftChild = rotationNode?.RightChild;
+            if (rotationNode?.RightChild is not null)
+                rotationNode.RightChild.Parent = criticalNode;
+            rotationNode.Parent = criticalNode.Parent; // The rotation node can not be a null (first line is throwing exception in case it is).
+            if (criticalNode.Parent is null)
+                Root = rotationNode;
+            else if (criticalNode == criticalNode.Parent.LeftChild)
+                criticalNode.Parent.LeftChild = rotationNode;
+            else
+                criticalNode.Parent.RightChild = rotationNode;
+            rotationNode.RightChild = criticalNode;
             criticalNode.Parent = rotationNode;
         }
 
