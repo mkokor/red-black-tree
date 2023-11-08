@@ -188,55 +188,54 @@ namespace RedBlackTree
         private void FixInsertion(Node criticalNode)
         {
             if (criticalNode == _sentinel) return;
-            if (criticalNode != root)
-                while (criticalNode.Parent!.Color == NodeColor.RED)
+            while (criticalNode.Parent!.Color == NodeColor.RED)
+            {
+                Node criticalNodeUncle;
+                if (criticalNode.Parent == criticalNode.Parent.Parent!.LeftChild)
                 {
-                    Node criticalNodeUncle;
-                    if (criticalNode.Parent == criticalNode.Parent.Parent!.LeftChild)
+                    criticalNodeUncle = criticalNode.Parent.Parent.RightChild!;
+                    if (criticalNodeUncle.Color == NodeColor.RED)
                     {
-                        criticalNodeUncle = criticalNode.Parent.Parent.RightChild!;
-                        if (criticalNodeUncle.Color == NodeColor.RED)
-                        {
-                            criticalNode.Parent.Color = NodeColor.BLACK;
-                            criticalNodeUncle.Color = NodeColor.BLACK;
-                            criticalNode.Parent.Parent.Color = NodeColor.RED;
-                            criticalNode = criticalNode.Parent.Parent;
-                        }
-                        else
-                        {
-                            if (criticalNode == criticalNode.Parent.RightChild)
-                            {
-                                criticalNode = criticalNode.Parent;
-                                RotateLeft(criticalNode);
-                            }
-                            criticalNode.Parent!.Color = NodeColor.BLACK;
-                            criticalNode.Parent.Parent!.Color = NodeColor.RED;
-                            RotateRight(criticalNode.Parent.Parent);
-                        }
+                        criticalNode.Parent.Color = NodeColor.BLACK;
+                        criticalNodeUncle.Color = NodeColor.BLACK;
+                        criticalNode.Parent.Parent.Color = NodeColor.RED;
+                        criticalNode = criticalNode.Parent.Parent;
                     }
                     else
                     {
-                        criticalNodeUncle = criticalNode.Parent.Parent.LeftChild!;
-                        if (criticalNodeUncle.Color == NodeColor.RED)
+                        if (criticalNode == criticalNode.Parent.RightChild)
                         {
-                            criticalNode.Parent.Color = NodeColor.BLACK;
-                            criticalNodeUncle.Color = NodeColor.BLACK;
-                            criticalNode.Parent.Parent.Color = NodeColor.RED;
-                            criticalNode = criticalNode.Parent.Parent;
+                            criticalNode = criticalNode.Parent;
+                            RotateLeft(criticalNode);
                         }
-                        else
-                        {
-                            if (criticalNode == criticalNode.Parent.LeftChild)
-                            {
-                                criticalNode = criticalNode.Parent;
-                                RotateRight(criticalNode);
-                            }
-                            criticalNode.Parent!.Color = NodeColor.BLACK;
-                            criticalNode.Parent.Parent!.Color = NodeColor.RED;
-                            RotateLeft(criticalNode.Parent.Parent);
-                        }
+                        criticalNode.Parent!.Color = NodeColor.BLACK;
+                        criticalNode.Parent.Parent!.Color = NodeColor.RED;
+                        RotateRight(criticalNode.Parent.Parent);
                     }
                 }
+                else
+                {
+                    criticalNodeUncle = criticalNode.Parent.Parent.LeftChild!;
+                    if (criticalNodeUncle.Color == NodeColor.RED)
+                    {
+                        criticalNode.Parent.Color = NodeColor.BLACK;
+                        criticalNodeUncle.Color = NodeColor.BLACK;
+                        criticalNode.Parent.Parent.Color = NodeColor.RED;
+                        criticalNode = criticalNode.Parent.Parent;
+                    }
+                    else
+                    {
+                        if (criticalNode == criticalNode.Parent.LeftChild)
+                        {
+                            criticalNode = criticalNode.Parent;
+                            RotateRight(criticalNode);
+                        }
+                        criticalNode.Parent!.Color = NodeColor.BLACK;
+                        criticalNode.Parent.Parent!.Color = NodeColor.RED;
+                        RotateLeft(criticalNode.Parent.Parent);
+                    }
+                }
+            }
             root.Color = NodeColor.BLACK;
         }
         #endregion
