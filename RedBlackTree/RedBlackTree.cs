@@ -30,10 +30,11 @@ namespace RedBlackTree
 
             public override string ToString()
             {
-                string LeftChildString = LeftChild is null || LeftChild.Index == 0 ? "sentinel" : $"{LeftChild.Index}";
-                string RightChildString = RightChild is null || RightChild.Index == 0 ? "sentinel" : $"{RightChild.Index}";
-                string ParentString = Parent is null || Parent.Index == 0 ? "sentinel" : $"{Parent.Index}";
-                return $"Index: {Index}; Value: {KeyValue}; Color: {Color}; LeftChild: {LeftChildString}; RightChild: {RightChildString}; Parent: {ParentString}";
+                string leftChildString = LeftChild is null || LeftChild.Index == 0 ? "sentinel" : $"{LeftChild.Index}";
+                string rightChildString = RightChild is null || RightChild.Index == 0 ? "sentinel" : $"{RightChild.Index}";
+                string rarentString = Parent is null || Parent.Index == 0 ? "sentinel" : $"{Parent.Index}";
+                string colorString = Color.ToString().ToLower();
+                return $"Index: {Index}; Value: {KeyValue}; Color: {colorString}; LeftChild: {leftChildString}; RightChild: {rightChildString}; Parent: {rarentString}";
             }
         }
         #endregion
@@ -109,7 +110,7 @@ namespace RedBlackTree
                 else if (IsLessThan(result.KeyValue!, value))
                     result = result.RightChild!;
                 else
-                    result = result.RightChild!;
+                    result = result.LeftChild!;
             if (result == _sentinel) throw new NotFoundException("Node with provided value does not exist.");
             return result;
         }
@@ -190,6 +191,17 @@ namespace RedBlackTree
                         RotateLeft(problematicNode.Parent);
                         problematicNode = root;
                     }
+                }
+                else
+                {
+                    problematicNodeSibling = problematicNode.Parent.LeftChild!;
+                    if (problematicNodeSibling.Color == NodeColor.RED) { }
+                    if (problematicNodeSibling.RightChild!.Color == NodeColor.BLACK && problematicNodeSibling.LeftChild!.Color == NodeColor.BLACK)
+                    {
+                        problematicNodeSibling.Color = NodeColor.RED;
+                        problematicNode = problematicNode.Parent;
+                    }
+                    else { }
                 }
             }
             problematicNode.Color = NodeColor.BLACK;
