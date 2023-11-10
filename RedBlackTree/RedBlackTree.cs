@@ -1,6 +1,7 @@
 using System.ComponentModel.Design;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
+using System.Security.Cryptography.X509Certificates;
 using RedBlackTree.Exceptions;
 
 namespace RedBlackTree
@@ -47,11 +48,11 @@ namespace RedBlackTree
 
         private Node root; // If a tree is empty, root is a null (it is sentinel node).
         private readonly Node _sentinel;
-        private int numberOfElements;
+        private int uniqueIdentifierGenerator;
 
         public RedBlackTree()
         {
-            numberOfElements = 0;
+            uniqueIdentifierGenerator = 0;
             _sentinel = new Node(default, null, null, NodeColor.BLACK);
             root = _sentinel;
         }
@@ -121,45 +122,78 @@ namespace RedBlackTree
             else if (destination == destination.Parent!.LeftChild)
                 destination.Parent.LeftChild = source;
             else destination.Parent.RightChild = source;
-            if (source != _sentinel)
-                source.Parent = destination.Parent;
+            source.Parent = destination.Parent;
         }
 
+        // criticalNode - node thas is being deleted
+        // replacementNode - node that the criticalNode is being replaced with
+        // problematicNode - node that replaces replacementNode
         public void Delete(TKeyValue value)
         {
             Node criticalNode = FindByValue(value);
             Node replacement = criticalNode;
             NodeColor replacementOriginalColor = replacement.Color;
-            Node x;
+            Node problematicNode;
             if (criticalNode.LeftChild == _sentinel)
             {
-                x = criticalNode.RightChild!;
+                problematicNode = criticalNode.RightChild!;
                 Transplant(criticalNode, criticalNode.RightChild!);
             }
             else if (criticalNode.RightChild == _sentinel)
             {
-                x = criticalNode.LeftChild!;
+                problematicNode = criticalNode.LeftChild!;
                 Transplant(criticalNode, criticalNode.LeftChild!);
             }
             else
             {
                 replacement = FindMinimum(replacement.RightChild!);
                 replacementOriginalColor = replacement.Color;
-                x = replacement.RightChild!;
+                problematicNode = replacement.RightChild!;
                 if (replacement != criticalNode.RightChild)
                 {
                     Transplant(replacement, replacement.RightChild!);
                     replacement.RightChild = criticalNode.RightChild;
                     replacement.RightChild!.Parent = replacement;
                 }
-                else if (x.Parent != _sentinel) x.Parent = replacement;
+                else problematicNode.Parent = replacement;
                 Transplant(criticalNode, replacement);
                 replacement.LeftChild = criticalNode.LeftChild;
                 replacement.LeftChild!.Parent = replacement;
                 replacement.Color = criticalNode.Color;
             }
             if (replacementOriginalColor == NodeColor.BLACK)
-                return; // Fix!
+                FixDeletion(problematicNode);
+        }
+
+        private void FixDeletion(Node problematicNode)
+        {
+            while (problematicNode != root && problematicNode.Color == NodeColor.BLACK)
+            {
+                Node problematicNodeSibling;
+                if (problematicNode == problematicNode.Parent!.LeftChild)
+                {
+                    problematicNodeSibling = problematicNode.Parent.RightChild!;
+                    if (problematicNodeSibling.Color == NodeColor.RED) { }
+                    if (problematicNodeSibling.LeftChild!.Color == NodeColor.BLACK && problematicNodeSibling.RightChild!.Color == NodeColor.BLACK) { }
+                    else
+                    {
+                        if (problematicNodeSibling.RightChild!.Color == NodeColor.BLACK)
+                        {
+                            problematicNodeSibling.LeftChild.Color = NodeColor.BLACK;
+                            problematicNodeSibling.Color = NodeColor.BLACK;
+                            RotateRight(problematicNodeSibling);
+                            problematicNodeSibling = problematicNode.Parent.RightChild!;
+                        }
+                        problematicNodeSibling.Color = problematicNode.Parent.Color;
+                        problematicNode.Parent.Color = NodeColor.BLACK;
+                        problematicNodeSibling.RightChild!.Color = NodeColor.BLACK;
+                        RotateLeft(problematicNode.Parent);
+                        problematicNode = root;
+                    }
+                }
+            }
+            problematicNode.Color = NodeColor.BLACK;
+            _sentinel.Parent = null;
         }
         #endregion
 
@@ -180,8 +214,8 @@ namespace RedBlackTree
                 currentNodeParent.LeftChild = newNode;
             else
                 currentNodeParent.RightChild = newNode;
-            numberOfElements++;
-            newNode.Index = numberOfElements;
+            uniqueIdentifierGenerator++;
+            newNode.Index = uniqueIdentifierGenerator;
             FixInsertion(newNode);
         }
 
@@ -243,7 +277,6 @@ namespace RedBlackTree
         #region Rotations
         private void RotateLeft(Node criticalNode)
         {
-            if (criticalNode.RightChild == _sentinel) throw new InvalidOperationException("Left rotation can not be done.");
             Node rotationNode = criticalNode.RightChild!;
             criticalNode.RightChild = rotationNode.LeftChild;
             if (rotationNode.LeftChild != _sentinel)
@@ -259,9 +292,8 @@ namespace RedBlackTree
             criticalNode.Parent = rotationNode;
         }
 
-        private void RotateRight([DisallowNull] Node criticalNode)
+        private void RotateRight(Node criticalNode)
         {
-            if (criticalNode.LeftChild == _sentinel) throw new InvalidOperationException("Right rotation can not be done.");
             Node rotationNode = criticalNode.LeftChild!;
             criticalNode.LeftChild = rotationNode.RightChild;
             if (rotationNode.RightChild != _sentinel)
