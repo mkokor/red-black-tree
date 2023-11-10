@@ -88,7 +88,7 @@ internal class Program
         try
         {
           _redBlackTree.Delete(GetInsertionValue());
-          Console.WriteLine("\n\nValue successfully inserted!");
+          Console.WriteLine("\n\nValue successfully deleted!");
         }
         catch (NotFoundException)
         {

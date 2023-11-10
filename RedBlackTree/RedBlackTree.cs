@@ -1,7 +1,3 @@
-using System.ComponentModel.Design;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Tracing;
-using System.Security.Cryptography.X509Certificates;
 using RedBlackTree.Exceptions;
 
 namespace RedBlackTree
@@ -11,7 +7,7 @@ namespace RedBlackTree
         #region NodeClass
         private class Node
         {
-            public int Index { get; set; } // This property is made for testing purposes.
+            public int Index { get; set; }
             public TKeyValue? KeyValue { get; set; }
             public NodeColor Color { get; set; }
 
@@ -47,7 +43,7 @@ namespace RedBlackTree
         }
         #endregion
 
-        private Node root; // If a tree is empty, root is a null (it is sentinel node).
+        private Node root; // If a tree is empty, root is equal to _sentinel.
         private readonly Node _sentinel;
         private int uniqueIdentifierGenerator;
 
@@ -69,6 +65,7 @@ namespace RedBlackTree
             return nodes;
         }
 
+        #region ComparingGenericValues
         private static bool IsLessThan(TKeyValue firstOperand, TKeyValue secondOperand)
         {
             _ = firstOperand ?? throw new ArgumentNullException(paramName: nameof(firstOperand));
@@ -82,16 +79,9 @@ namespace RedBlackTree
             _ = secondOperand ?? throw new ArgumentNullException(nameof(secondOperand));
             return firstOperand?.CompareTo(secondOperand) == 0;
         }
+        #endregion
 
-        public override string ToString()
-        {
-            List<Node> nodes = GetNodesInorder(root);
-            if (nodes.Count == 0)
-                return "The tree is empty.";
-            return nodes.Select(node => node.ToString() + (nodes.IndexOf(node) == nodes.Count - 1 ? "" : "\n"))
-                        .Aggregate((result, value) => result + value);
-        }
-
+        #region SearchingTree
         private Node FindMinimum(Node treeRoot)
         {
             if (treeRoot is null || treeRoot == _sentinel)
@@ -114,6 +104,7 @@ namespace RedBlackTree
             if (result == _sentinel) throw new NotFoundException("Node with provided value does not exist.");
             return result;
         }
+        #endregion
 
         #region Deletion
         private void Transplant(Node destination, Node source)
@@ -147,7 +138,7 @@ namespace RedBlackTree
             }
             else
             {
-                replacement = FindMinimum(replacement.RightChild!);
+                replacement = FindMinimum(criticalNode.RightChild!);
                 replacementOriginalColor = replacement.Color;
                 problematicNode = replacement.RightChild!;
                 if (replacement != criticalNode.RightChild)
@@ -174,8 +165,18 @@ namespace RedBlackTree
                 if (problematicNode == problematicNode.Parent!.LeftChild)
                 {
                     problematicNodeSibling = problematicNode.Parent.RightChild!;
-                    if (problematicNodeSibling.Color == NodeColor.RED) { }
-                    if (problematicNodeSibling.LeftChild!.Color == NodeColor.BLACK && problematicNodeSibling.RightChild!.Color == NodeColor.BLACK) { }
+                    if (problematicNodeSibling.Color == NodeColor.RED)
+                    {
+                        problematicNodeSibling.Color = NodeColor.BLACK;
+                        problematicNode.Parent.Color = NodeColor.RED;
+                        RotateLeft(problematicNode.Parent);
+                        problematicNodeSibling = problematicNode.Parent.RightChild!;
+                    }
+                    if (problematicNodeSibling.LeftChild!.Color == NodeColor.BLACK && problematicNodeSibling.RightChild!.Color == NodeColor.BLACK)
+                    {
+                        problematicNodeSibling.Color = NodeColor.RED;
+                        problematicNode = problematicNode.Parent;
+                    }
                     else
                     {
                         if (problematicNodeSibling.RightChild!.Color == NodeColor.BLACK)
@@ -195,13 +196,33 @@ namespace RedBlackTree
                 else
                 {
                     problematicNodeSibling = problematicNode.Parent.LeftChild!;
-                    if (problematicNodeSibling.Color == NodeColor.RED) { }
+                    if (problematicNodeSibling.Color == NodeColor.RED)
+                    {
+                        problematicNodeSibling.Color = NodeColor.BLACK;
+                        problematicNode.Parent.Color = NodeColor.RED;
+                        RotateRight(problematicNode.Parent);
+                        problematicNodeSibling = problematicNode.Parent.LeftChild!;
+                    }
                     if (problematicNodeSibling.RightChild!.Color == NodeColor.BLACK && problematicNodeSibling.LeftChild!.Color == NodeColor.BLACK)
                     {
                         problematicNodeSibling.Color = NodeColor.RED;
                         problematicNode = problematicNode.Parent;
                     }
-                    else { }
+                    else
+                    {
+                        if (problematicNodeSibling.LeftChild!.Color == NodeColor.BLACK)
+                        {
+                            problematicNodeSibling.RightChild.Color = NodeColor.BLACK;
+                            problematicNodeSibling.Color = NodeColor.BLACK;
+                            RotateLeft(problematicNodeSibling);
+                            problematicNodeSibling = problematicNode.Parent.LeftChild!;
+                        }
+                        problematicNodeSibling.Color = problematicNode.Parent.Color;
+                        problematicNode.Parent.Color = NodeColor.BLACK;
+                        problematicNodeSibling.LeftChild!.Color = NodeColor.BLACK;
+                        RotateRight(problematicNode.Parent);
+                        problematicNode = root;
+                    }
                 }
             }
             problematicNode.Color = NodeColor.BLACK;
@@ -289,6 +310,7 @@ namespace RedBlackTree
         #region Rotations
         private void RotateLeft(Node criticalNode)
         {
+            if (criticalNode.RightChild == _sentinel) throw new InvalidOperationException("Left rotation can not be done.");
             Node rotationNode = criticalNode.RightChild!;
             criticalNode.RightChild = rotationNode.LeftChild;
             if (rotationNode.LeftChild != _sentinel)
@@ -306,6 +328,7 @@ namespace RedBlackTree
 
         private void RotateRight(Node criticalNode)
         {
+            if (criticalNode.LeftChild == _sentinel) throw new InvalidOperationException("Right rotation can not be done.");
             Node rotationNode = criticalNode.LeftChild!;
             criticalNode.LeftChild = rotationNode.RightChild;
             if (rotationNode.RightChild != _sentinel)
@@ -321,5 +344,14 @@ namespace RedBlackTree
             criticalNode.Parent = rotationNode;
         }
         #endregion
+
+        public override string ToString()
+        {
+            List<Node> nodes = GetNodesInorder(root);
+            if (nodes.Count == 0)
+                return "The tree is empty.";
+            return nodes.Select(node => node.ToString() + (nodes.IndexOf(node) == nodes.Count - 1 ? "" : "\n"))
+                        .Aggregate((result, value) => result + value);
+        }
     }
 }
