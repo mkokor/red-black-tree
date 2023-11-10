@@ -3,7 +3,7 @@ namespace RedBlackTree.Tests;
 public class DeletionTest
 {
     [Fact]
-    public void Deletion_MultipleNumbers_CorrectInorderNodesResult()
+    public void Deletion_MultipleNumbers_ReturnsCorrectInorderNodesList()
     {
         RedBlackTree<int> redBlackTree = new();
         List<int> numbers = new() { 6, 11, 10, 2, 9, 7, 5, 13, 22, 27, 36, 12, 31 };
@@ -25,6 +25,21 @@ public class DeletionTest
             "Index: 13; Value: 31; Color: black; LeftChild: sentinel; RightChild: sentinel; Parent: 9"
         };
         string expectedResult = nodes.Aggregate((result, element) => result + element);
+
+        Assert.Equal(expectedResult, actualResult);
+    }
+
+    [Fact]
+    public void Delete_OnlyRoot_ReturnsSentinel()
+    {
+        RedBlackTree<int> redBlackTree = new();
+
+        redBlackTree.Insert(10);
+        redBlackTree.Delete(10);
+
+        string actualResult = redBlackTree.ToString();
+
+        string expectedResult = "The tree is empty.";
 
         Assert.Equal(expectedResult, actualResult);
     }

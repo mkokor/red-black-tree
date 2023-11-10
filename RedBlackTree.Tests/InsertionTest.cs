@@ -3,7 +3,7 @@ namespace RedBlackTree.Tests;
 public class InsertionTest
 {
     [Fact]
-    public void Insertion_MultipleNumbers_CorrectInorderNodesResult()
+    public void Insert_MultipleNumbers_CorrectInorderNodesResult()
     {
         RedBlackTree<int> redBlackTree = new();
         List<int> numbers = new() { 6, 11, 10, 2, 9, 7, 5, 13, 22, 27, 36, 12, 31 };
