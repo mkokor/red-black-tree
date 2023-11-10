@@ -3,7 +3,7 @@ namespace RedBlackTree.Tests;
 public class DeletionTest
 {
     [Fact]
-    public void Deletion_MultipleNumbers_ReturnsCorrectInorderNodesList()
+    public void Delete_MultipleNumbers_ReturnsCorrectInorderNodesList()
     {
         RedBlackTree<int> redBlackTree = new();
         List<int> numbers = new() { 6, 11, 10, 2, 9, 7, 5, 13, 22, 27, 36, 12, 31 };
@@ -40,6 +40,28 @@ public class DeletionTest
         string actualResult = redBlackTree.ToString();
 
         string expectedResult = "The tree is empty.";
+
+        Assert.Equal(expectedResult, actualResult);
+    }
+
+    [Fact]
+    public void Delete_RootOnMultipleNodes_ReturnsCorrectInorderNodesList()
+    {
+        RedBlackTree<int> redBlackTree = new();
+        List<int> numbers = new() { 11, 432, 1, 0, 0 };
+
+        numbers.ForEach(redBlackTree.Insert);
+        redBlackTree.Delete(11);
+
+        string actualResult = redBlackTree.ToString();
+        List<string> nodes = new()
+        {
+            "Index: 4; Value: 0; Color: black; LeftChild: sentinel; RightChild: sentinel; Parent: 5\n",
+            "Index: 5; Value: 0; Color: black; LeftChild: 4; RightChild: 2; Parent: sentinel\n",
+            "Index: 3; Value: 1; Color: red; LeftChild: sentinel; RightChild: sentinel; Parent: 2\n",
+            "Index: 2; Value: 432; Color: black; LeftChild: 3; RightChild: sentinel; Parent: 5",
+        };
+        string expectedResult = nodes.Aggregate((result, element) => result + element);
 
         Assert.Equal(expectedResult, actualResult);
     }
