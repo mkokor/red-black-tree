@@ -28,9 +28,9 @@ namespace RedBlackTree
             {
                 string leftChildString = LeftChild is null || LeftChild.Index == 0 ? "sentinel" : $"{LeftChild.Index}";
                 string rightChildString = RightChild is null || RightChild.Index == 0 ? "sentinel" : $"{RightChild.Index}";
-                string rarentString = Parent is null || Parent.Index == 0 ? "sentinel" : $"{Parent.Index}";
+                string parentString = Parent is null || Parent.Index == 0 ? "sentinel" : $"{Parent.Index}";
                 string colorString = Color.ToString().ToLower();
-                return $"Index: {Index}; Value: {KeyValue}; Color: {colorString}; LeftChild: {leftChildString}; RightChild: {rightChildString}; Parent: {rarentString}";
+                return $"Index: {Index}; Value: {KeyValue}; Color: {colorString}; LeftChild: {leftChildString}; RightChild: {rightChildString}; Parent: {parentString}";
             }
         }
         #endregion
