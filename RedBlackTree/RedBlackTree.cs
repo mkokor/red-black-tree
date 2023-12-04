@@ -155,6 +155,8 @@ namespace RedBlackTree
             }
             if (replacementOriginalColor == NodeColor.BLACK)
                 FixDeletion(problematicNode);
+            else
+                _sentinel.Parent = null;
         }
 
         private void FixDeletion(Node problematicNode)
